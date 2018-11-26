@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en" class="uk-height-1-1">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>EmojiMe</title>
+        <link rel="icon" href="img/favicon.ico">
+        <!-- CSS FILES -->
+        <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/uikit.min.css') }}">
+    </head>
+    <body class="uk-height-1-1">
+        <div class="uk-flex uk-flex-center uk-flex-middle uk-background-secondary uk-height-viewport uk-light">
+            <div class="uk-width-large uk-padding-small">
+                <fieldset class="uk-fieldset">
+                    <legend class="uk-legend">EmojiMe Debug Mode</legend>
+
+                    <!--Video Feeds-->
+                    <div class="uk-margin">
+                        <img class="uk-align-center" width="400" src="/video_feed">
+                    </div>
+
+                    <!--Emoji Action-->
+                    <div class="uk-margin">
+                        <textarea id=text_area class="uk-textarea" rows="4" placeholder="Type in here!"></textarea>
+                        <div class="uk-margin-small">
+                            <a href="#" id=emoji_button><button class="uk-button uk-button-primary uk-button-primary uk-width-1-1">Get Emoji</button></a>
+                        </div>
+                    </div>
+
+                </fieldset>
+            </div>
+        </div>
+        
+        <!-- JS FILES -->
+        <script src="{{ url_for('static', filename='js/uikit.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/uikit-icons.min.js') }}"></script>
+    </body>
+</html>
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script type=text/javascript>
+
+$SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
+
+// insert at caret function obtained from https://stackoverflow.com/a/946556
+$.fn.extend({
+  insertAtCaret: function(myValue) {
+    this.each(function() {
+      if (document.selection) {
+        this.focus();
+        var sel = document.selection.createRange();
+        sel.text = myValue;
+        this.focus();
+      } else if (this.selectionStart || this.selectionStart == '0') {
+        var startPos = this.selectionStart;
+        var endPos = this.selectionEnd;
+        var scrollTop = this.scrollTop;
+        this.value = this.value.substring(0, startPos) +
+          myValue + this.value.substring(endPos,this.value.length);
+        this.focus();
+        this.selectionStart = startPos + myValue.length;
+        this.selectionEnd = startPos + myValue.length;
+        this.scrollTop = scrollTop;
+      } else {
+        this.value += myValue;
+        this.focus();
+      }
+    });
+    return this;
+  }
+});
+
+$(function() {
+  $('a#emoji_button').bind('click', function() {
+    $.getJSON($SCRIPT_ROOT + '/emoji_grab', {
+    }, function(data) {
+      $('#text_area').insertAtCaret(data.result);
+    });
+    return false;
+  });
+});
+</script>
