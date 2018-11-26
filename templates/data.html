@@ -12,7 +12,7 @@
         <div class="uk-flex uk-flex-center uk-flex-middle uk-background-secondary uk-height-viewport uk-light">
             <div class="uk-width-large uk-padding-small">
                 <fieldset class="uk-fieldset">
-                    <legend class="uk-legend">EmojiMe Debug Mode</legend>
+                    <legend class="uk-legend">EmojiMe Data Generation Mode</legend>
 
                     <!--Video Feeds-->
                     <div class="uk-margin">
@@ -21,9 +21,8 @@
 
                     <!--Emoji Action-->
                     <div class="uk-margin">
-                        <textarea id=text_area class="uk-textarea" rows="4" placeholder="Type in here!"></textarea>
                         <div class="uk-margin-small">
-                            <a href="#" id=emoji_button><button class="uk-button uk-button-primary uk-button-primary uk-width-1-1">Get Emoji</button></a>
+                            <a href="#" id=capture_button><button class="uk-button uk-button-primary uk-button-primary uk-width-1-1">Capture image</button></a>
                         </div>
                     </div>
 
@@ -71,7 +70,7 @@ $.fn.extend({
 });
 
 $(function() {
-  $('a#emoji_button').bind('click', function() {
+  $('a#capture_button').bind('click', function() {
     $.getJSON($SCRIPT_ROOT + '/action', {
     }, function(data) {
       $('#text_area').insertAtCaret(data.result);

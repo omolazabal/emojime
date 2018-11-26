@@ -11,8 +11,9 @@ from sklearn.preprocessing import StandardScaler
 emotions = ['neutral', 'happy', 'sad', 'fear', 'angry']
 
 class FaceDetector:
-    def __init__(self, debug):
+    def __init__(self, debug=False, data_gen=False):
         self.debug = debug
+        self.data_gen = data_gen
         self.detector = dlib.get_frontal_face_detector()
         self.predictor = dlib.shape_predictor('models/shape_predictor_68_face_landmarks.dat')
 
@@ -45,8 +46,15 @@ class FaceDetector:
 
         return None
 
-    
     def frame(self):
+        width = 400
+        _, frame = self.vs.read()
+        (h, w) = frame.shape[:2]
+        new_size = (width, int(h * width/float(w)))
+        frame = cv2.resize(frame, new_size)
+        return frame
+    
+    def landscape_frame(self):
         width = 400
 
         _, frame = self.vs.read()
@@ -62,13 +70,20 @@ class FaceDetector:
             shape = shape_to_np(shape)
             (x, y, w, h) = rect_to_bb(rect)
             cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 1)
-            text = 'Face'
             if self.debug:
                 pred = self.predict()
                 if pred is not None:
                     text = emotions[int(pred[0])]
                 else:
                     text = 'None'
+            if self.data_gen:
+                if w > 120 and h > 120:
+                    text = 'Too close'
+                elif w < 75 and h < 75:
+                    text = 'Too far'
+                else:
+                    text = 'Perfect'
+            text += ' ({}, {})'.format(w, h)
             cv2.putText(frame, text, (x - 10, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
             for (x, y) in shape:
                 cv2.circle(frame, (x, y), 1, (0, 255, 0), -1)

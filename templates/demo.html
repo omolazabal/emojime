@@ -75,7 +75,7 @@ $.fn.extend({
 
 $(function() {
   $('a#emoji_button').bind('click', function() {
-    $.getJSON($SCRIPT_ROOT + '/emoji_grab', {
+    $.getJSON($SCRIPT_ROOT + '/action', {
     }, function(data) {
       $('#text_area').insertAtCaret(data.result);
     });
