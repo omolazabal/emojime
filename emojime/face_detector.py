@@ -61,7 +61,7 @@ class FaceDetector:
             shape = self.predictor(frame, rect)
             shape = shape_to_np(shape)
             (x, y, w, h) = rect_to_bb(rect)
-            cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 2)
+            cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 1)
             text = 'Face'
             if self.debug:
                 pred = self.predict()
