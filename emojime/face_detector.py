@@ -63,30 +63,33 @@ class FaceDetector:
 
         frame = cv2.resize(frame, new_size)
 
-        rects = self.detector(frame, 0)
-        if len(rects) > 0:
-            rect = rects[0]
-            shape = self.predictor(frame, rect)
-            shape = shape_to_np(shape)
-            (x, y, w, h) = rect_to_bb(rect)
-            cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 1)
-            if self.debug:
-                pred = self.predict()
-                if pred is not None:
-                    text = emotions[int(pred[0])]
+        if self.debug or self.data_gen:
+            rects = self.detector(frame, 0)
+            if len(rects) > 0:
+                rect = rects[0]
+                shape = self.predictor(frame, rect)
+                shape = shape_to_np(shape)
+                (x, y, w, h) = rect_to_bb(rect)
+                cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 1)
+                if self.debug:
+                    pred = self.predict()
+                    if pred is not None:
+                        text = emotions[int(pred[0])]
+                    else:
+                        text = 'None'
+                elif self.data_gen:
+                    if w > 120 and h > 120:
+                        text = 'Too close'
+                    elif w < 75 and h < 75:
+                        text = 'Too far'
+                    else:
+                        text = 'Perfect'
                 else:
-                    text = 'None'
-            if self.data_gen:
-                if w > 120 and h > 120:
-                    text = 'Too close'
-                elif w < 75 and h < 75:
-                    text = 'Too far'
-                else:
-                    text = 'Perfect'
-            text += ' ({}, {})'.format(w, h)
-            cv2.putText(frame, text, (x - 10, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
-            for (x, y) in shape:
-                cv2.circle(frame, (x, y), 1, (0, 255, 0), -1)
+                    text = 'Undefined'
+                text += ' ({}, {})'.format(w, h)
+                cv2.putText(frame, text, (x - 10, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
+                for (x, y) in shape:
+                    cv2.circle(frame, (x, y), 1, (0, 255, 0), -1)
             
         _, jpeg = cv2.imencode('.jpg', frame)
         jpeg = jpeg.tobytes()
