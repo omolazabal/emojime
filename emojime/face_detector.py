@@ -42,9 +42,11 @@ class FaceDetector:
             shape = shape_to_np(shape)
             input_ = distances(shape)
             input_ = self.scaler.transform(input_)
-            return self.model.predict(input_)
+            probas = self.model.predict_proba(input_)[0, :]
+            max_index = np.argmax(probas)
+            return emotions[max_index], round(probas[max_index], 2)
 
-        return None
+        return None, None
 
     def frame(self):
         width = 400
@@ -72,9 +74,9 @@ class FaceDetector:
                 (x, y, w, h) = rect_to_bb(rect)
                 cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 1)
                 if self.debug:
-                    pred = self.predict()
-                    if pred is not None:
-                        text = emotions[int(pred[0])]
+                    label, proba = self.predict()
+                    if label is not None:
+                        text = '{} ({})'.format(label, proba)
                     else:
                         text = 'None'
                 elif self.data_gen:
@@ -86,7 +88,6 @@ class FaceDetector:
                         text = 'Perfect'
                 else:
                     text = 'Undefined'
-                text += ' ({}, {})'.format(w, h)
                 cv2.putText(frame, text, (x - 10, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
                 for (x, y) in shape:
                     cv2.circle(frame, (x, y), 1, (0, 255, 0), -1)

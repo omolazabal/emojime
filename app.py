@@ -10,8 +10,6 @@ import cv2
 
 
 app = Flask(__name__)
-emotions = ['neutral', 'happy', 'sad', 'fear', 'angry']
-
 def write_to_clipboard(output):
     process = subprocess.Popen(
         'pbcopy', env={'LANG': 'en_US.UTF-8'}, stdin=subprocess.PIPE)
@@ -45,12 +43,12 @@ def background_process_test():
         cv2.imwrite('data/emotion-images/{}/{}.png'.format(args.type, str(args.start)), face_detector.frame())
         return jsonify(result='nothing')
     else:
-        pred = face_detector.predict()
-        if pred is not None:
-            emotion = emoji[emotions[int(pred[0])]]
-            write_to_clipboard(emoji[emotions[int(pred[0])]])
+        label, proba = face_detector.predict()
+        if label is not None:
+            emotion = emoji[label]
+            write_to_clipboard(emoji[label])
         else:
-            emotion = emoji[emotions[0]]
+            emotion = emoji['nothing']
         return jsonify(result=emotion)
 
 if __name__ == '__main__':
