@@ -2,8 +2,6 @@
 from flask import Flask, render_template, Response, jsonify
 from emojime import FaceDetector
 from emojime import emoji
-import numpy as np
-import sys
 import subprocess
 import argparse
 
@@ -39,7 +37,8 @@ def background_process_test():
     global args
     global face_detector
     if args.data:
-        face_detector.save_face('data/emotion-images/{}/{}.png'.format(args.type, str(args.start)))
+        face_detector.save_face('data/emotion-images/{}/{}.png'.format(args.type, str(args.start)), args.start)
+        args.start += 1
         return jsonify(result='nothing')
     else:
         label, proba = face_detector.predict()

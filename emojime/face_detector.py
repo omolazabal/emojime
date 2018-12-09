@@ -30,67 +30,79 @@ class FaceDetector:
         cv2.destroyAllWindows()
         self.vs.release()
 
-    def predict(self):
-        _, frame = self.vs.read()
-        frame = cv2.resize(frame, utils.new_size(self.width, frame))
-
+    def extract_face(self, frame):
         rects = self.detector(frame, 0)
         if len(rects) > 0:
             rect = rects[0]
-            shape = self.predictor(frame, rect)
-            shape = shape_to_np(shape)
-            input_ = distances(shape)
-            input_ = self.scaler.transform(input_)
-            probas = self.model.predict_proba(input_)[0, :]
-            max_index = np.argmax(probas)
-            return emotions[max_index], round(probas[max_index], 2)
+            (x, y, w, h) = rect_to_bb(rect)
+            (x, y, w, h) = (x-int(w*self.extraction_boundary_padding),
+                            y-int(h*self.extraction_boundary_padding),
+                            w+(int(w*self.extraction_boundary_padding))*2,
+                            h+(int(h*self.extraction_boundary_padding))*2)
+            if y > 0 and y+h < frame.shape[0] and x > 0 and x+w < frame.shape[1]:
+                frame = frame[y:y+h, x:x+w]
+                frame = cv2.resize(frame, utils.new_size(self.width//2, frame))
+                return frame
+        return None
+
+    def predict(self):
+        if self.extracted_face is not None:
+            frame = self.extracted_face
+        else:
+            _, frame = self.vs.read()
+            frame = cv2.resize(frame, utils.new_size(self.width, frame))
+            frame = self.extract_face(frame)
+
+        if frame is not None:
+            rects = self.detector(frame, 0)
+            if len(rects) > 0:
+                rect = rects[0]
+                shape = self.predictor(frame, rect)
+                shape = shape_to_np(shape)
+                input_ = distances(shape)
+                input_ = self.scaler.transform(input_)
+                probas = self.model.predict_proba(input_)[0, :]
+                max_index = np.argmax(probas)
+                return emotions[max_index], round(probas[max_index], 2)
 
         return None, None
 
-    def save_face(self, path):
+    def save_face(self, path, count):
         if self.extracted_face is not None:
             cv2.imwrite(path, self.extracted_face)
-            print('Image saved')
+            print('Image {} saved'.format(count))
+        else:
+            print('Error saving image: face not found')
     
     def landscape_frame(self):
         _, frame = self.vs.read()
         frame = cv2.resize(frame, utils.new_size(self.width, frame))
 
         if self.debug or self.data_gen:
-            rects = self.detector(frame, 0)
-            if len(rects) > 0:
-                # If a face is detected
-                rect = rects[0]
-                (x, y, w, h) = rect_to_bb(rect)
-                (x, y, w, h) = (x-int(w*self.extraction_boundary_padding),
-                                y-int(h*self.extraction_boundary_padding),
-                                w+(int(w*self.extraction_boundary_padding))*2,
-                                h+(int(h*self.extraction_boundary_padding))*2)
-                if y > 0 and y+h < frame.shape[0] and x > 0 and x+w < frame.shape[1]:
-                    frame = frame[y:y+h, x:x+w]
-                    frame = cv2.resize(frame, utils.new_size(self.width//2, frame))
-                    self.extracted_face = np.copy(frame)
-                    rects = self.detector(frame, 0)
-                    if len(rects) > 0:
-                        rect = rects[0]
-                        (x, y, w, h) = rect_to_bb(rect)
-                        cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 1)
-                        shape = self.predictor(frame, rect)
-                        shape = shape_to_np(shape)
+            self.extracted_face = self.extract_face(frame)
+            if self.extracted_face is not None:
+                frame = np.copy(self.extracted_face)
+                rects = self.detector(frame, 0)
+                if len(rects) > 0:
+                    rect = rects[0]
+                    (x, y, w, h) = rect_to_bb(rect)
+                    cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 1)
+                    shape = self.predictor(frame, rect)
+                    shape = shape_to_np(shape)
 
-                        if self.debug:
-                            label, proba = self.predict()
-                            if label is not None:
-                                text = '{} ({})'.format(label, proba)
-                            else:
-                                text = 'None'
+                    if self.debug:
+                        label, proba = self.predict()
+                        if label is not None:
+                            text = '{} ({})'.format(label, proba)
                         else:
-                            text = 'Face detected'
+                            text = 'None'
+                    else:
+                        text = 'Face detected'
 
-                        cv2.putText(frame, text, (x - 10, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
+                    cv2.putText(frame, text, (x - 10, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
 
-                        for (x, y) in shape:
-                            cv2.circle(frame, (x, y), 1, (0, 255, 0), -1)
+                    for (x, y) in shape:
+                        cv2.circle(frame, (x, y), 1, (0, 255, 0), -1)
                 
         _, jpeg = cv2.imencode('.jpg', frame)
         jpeg = jpeg.tobytes()
