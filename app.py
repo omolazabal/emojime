@@ -6,7 +6,6 @@ import numpy as np
 import sys
 import subprocess
 import argparse
-import cv2
 
 
 app = Flask(__name__)
@@ -40,7 +39,7 @@ def background_process_test():
     global args
     global face_detector
     if args.data:
-        cv2.imwrite('data/emotion-images/{}/{}.png'.format(args.type, str(args.start)), face_detector.frame())
+        face_detector.save_face('data/emotion-images/{}/{}.png'.format(args.type, str(args.start)))
         return jsonify(result='nothing')
     else:
         label, proba = face_detector.predict()

@@ -2,6 +2,7 @@
 import numpy as np
 import cv2
 import dlib
+from . import utils
 from .utils import shape_to_np, rect_to_bb, distances
 import pickle
 from sklearn.svm import SVC
@@ -21,19 +22,17 @@ class FaceDetector:
         self.vs = cv2.VideoCapture(0)
         self.model = pickle.load(open('models/svm_emotion_classifier', 'rb'))
         self.scaler = pickle.load(open('models/emotion_scaler', 'rb'))
+        self.width = 400
+        self.extraction_boundary_padding = 0.3
+        self.extracted_face = None
 
     def __del__(self):
         cv2.destroyAllWindows()
         self.vs.release()
 
     def predict(self):
-        width = 400
-
         _, frame = self.vs.read()
-        (h, w) = frame.shape[:2]
-        new_size = (width, int(h * width/float(w)))
-
-        frame = cv2.resize(frame, new_size)
+        frame = cv2.resize(frame, utils.new_size(self.width, frame))
 
         rects = self.detector(frame, 0)
         if len(rects) > 0:
@@ -48,51 +47,51 @@ class FaceDetector:
 
         return None, None
 
-    def frame(self):
-        width = 400
-        _, frame = self.vs.read()
-        (h, w) = frame.shape[:2]
-        new_size = (width, int(h * width/float(w)))
-        frame = cv2.resize(frame, new_size)
-        return frame
+    def save_face(self, path):
+        if self.extracted_face is not None:
+            cv2.imwrite(path, self.extracted_face)
+            print('Image saved')
     
     def landscape_frame(self):
-        width = 400
-
         _, frame = self.vs.read()
-        (h, w) = frame.shape[:2]
-        new_size = (width, int(h * width/float(w)))
-
-        frame = cv2.resize(frame, new_size)
+        frame = cv2.resize(frame, utils.new_size(self.width, frame))
 
         if self.debug or self.data_gen:
             rects = self.detector(frame, 0)
             if len(rects) > 0:
+                # If a face is detected
                 rect = rects[0]
-                shape = self.predictor(frame, rect)
-                shape = shape_to_np(shape)
                 (x, y, w, h) = rect_to_bb(rect)
-                cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 1)
-                if self.debug:
-                    label, proba = self.predict()
-                    if label is not None:
-                        text = '{} ({})'.format(label, proba)
-                    else:
-                        text = 'None'
-                elif self.data_gen:
-                    if w > 120 and h > 120:
-                        text = 'Too close'
-                    elif w < 75 and h < 75:
-                        text = 'Too far'
-                    else:
-                        text = 'Perfect'
-                else:
-                    text = 'Undefined'
-                cv2.putText(frame, text, (x - 10, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
-                for (x, y) in shape:
-                    cv2.circle(frame, (x, y), 1, (0, 255, 0), -1)
-            
+                (x, y, w, h) = (x-int(w*self.extraction_boundary_padding),
+                                y-int(h*self.extraction_boundary_padding),
+                                w+(int(w*self.extraction_boundary_padding))*2,
+                                h+(int(h*self.extraction_boundary_padding))*2)
+                if y > 0 and y+h < frame.shape[0] and x > 0 and x+w < frame.shape[1]:
+                    frame = frame[y:y+h, x:x+w]
+                    frame = cv2.resize(frame, utils.new_size(self.width//2, frame))
+                    self.extracted_face = np.copy(frame)
+                    rects = self.detector(frame, 0)
+                    if len(rects) > 0:
+                        rect = rects[0]
+                        (x, y, w, h) = rect_to_bb(rect)
+                        cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 1)
+                        shape = self.predictor(frame, rect)
+                        shape = shape_to_np(shape)
+
+                        if self.debug:
+                            label, proba = self.predict()
+                            if label is not None:
+                                text = '{} ({})'.format(label, proba)
+                            else:
+                                text = 'None'
+                        else:
+                            text = 'Face detected'
+
+                        cv2.putText(frame, text, (x - 10, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
+
+                        for (x, y) in shape:
+                            cv2.circle(frame, (x, y), 1, (0, 255, 0), -1)
+                
         _, jpeg = cv2.imencode('.jpg', frame)
         jpeg = jpeg.tobytes()
-
         return jpeg

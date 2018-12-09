@@ -40,6 +40,12 @@ def distances(shape):
 			col += 1
 	return landmark_dists
 
+def new_size(width, img):
+    (h, w) = img.shape[:2]
+    new_size = (width, int(h * width/float(w)))
+    return new_size
+
+
 def plot_confusion_matrix(cm, classes,
                           title='Confusion matrix',
                           cmap=plt.cm.Blues):
