@@ -40,7 +40,18 @@ To run the application in data generation mode navigate to the root of the Emoji
  - `<parameter 1>` should specify the emotion you will be providing training data for. Valid parameters for parameter 1 are `angry` `sad` `happy` `fear` `neutral`.
   - `<parameter 2>` should specify the starting index of your image. The index are used to name the files. For instance if you specify `3` for parameter 2, your images will be saved as `3.png`, `4.png`, ... , `n.png` where n represents the index of the last image you took. Valid parameters for parameter 2 are any positive integer value.
  
-## Files
+## Files and directories
   - `/app.py` is the main file of the program.
+    - Launches the flask server and acts as the middle-man between the webpage and the resources needed to run the program. Utilizes the `emojime` module to initialize a face detector which is the basis of the program. 
+  - `/emojime` is the module utilized to perform all back-end actions.
+    - `emojime/face_detector.py` contains the class definiton for `FaceDetector`. A `FaceDetector` object is utilized to perform image processing on the user's face. The object is able to extract the user's face, apply landmarks, make predictions, and save training data.
+  - `/templates` is the directory that contains the html pages for the different modes of the application. [UIKit](https://getuikit.com/) is utilized to design the different webpages.
+  - `/models` contains the trained models that are utilized for this project
+    - `/models/emotion_scaler` contains the standard deviation and mean of the traning data. It is utilized to standardize the data predictions will be performed on.
+    - `/models/svm_emotion_classifier` contains the model that is used to predict which emotion a given image has. 
+    - `/models/shape_predictor_68_face_landmarks.dat` contains the model that is utilized to extract 68 facial landmarks of a given image.
+  - `/data` is a directory that contains the training data for the `/models/svm_emoition_classifier` model
+  - `/notebooks` contains the Jupyter Notebooks that were utilized to create the `models/svm_emotion_classifier` model.
+    - `/notebooks/create_data.ipynb` is utilized to extract the features from the images the model will be training off of. It extracts the landmarks, calulates the euclidean distance between each landmark, and formats the training data into two Numpy arrays `X` and `y`. `X` consists of training samples and `y` contains the corresponding labels.
+    - `/notebooks/train_model.ipynb` contains the code that is utilized to train the `/models/svm_emotion_classifier` model. It creates a train-test split, evaluates the performance of the model using the testing data, and the trains the a model using the entire dataset.
   
- #TODO finish up files
