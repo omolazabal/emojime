@@ -3,4 +3,4 @@ dlib==19.16.0
 matplotlib==3.0.0
 opencv_python==3.4.3.18
 numpy==1.15.2
-scikit_learn==0.20.1
+scikit_learn==0.19.1
