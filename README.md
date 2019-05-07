@@ -7,7 +7,7 @@ EmojiMe is a program that allows users to insert an emoji at the location of the
   - matplotlib 3.0.0
   - opencv_python 3.4.3.18
   - numpy 1.15.2
-  - scikit_learn 0.20.1
+  - scikit_learn 0.19.1
 
 ## Installation  
 1. Download the source code of the project by running `git clone https://github.com/omolazabal/emojime.git` in your shell.
