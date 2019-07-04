@@ -12,10 +12,7 @@ EmojiMe is a program that allows users to insert an emoji at the location of the
 ## Installation  
 1. Download the source code of the project by running `git clone https://github.com/omolazabal/emojime.git` in your shell.
 2. [Install Python 3](https://www.python.org/downloads/)
-3. Navigate to the root of the EmojiMe source code and run `pip install -r requirements.txt` in your shell to install most of the dependicies.
-4. Install Dlib
-    - [Unix Based OS](https://www.learnopencv.com/install-dlib-on-macos/)
-    - [Windows](https://www.learnopencv.com/install-dlib-on-windows/)
+3. Navigate to the root of the EmojiMe source code and run `pip install -r requirements.txt` in your shell to install dependencies.
     
 ## Run
 To run the application in standard mode navigate to the root of the EmojiMe source code and run the command `python3 app.py` in your shell.
